@@ -1,0 +1,269 @@
+<html>
+<head>
+	<title>shariki</title>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mootools/1.6.0/mootools-core.js"></script>
+	<script type="text/javascript">
+		var canvas, ctx, figure, idTimer;
+		TFigure = new Class({
+			initialize: function(pX,pY) {
+				this.posX = pX; //позиция шарика по X
+				this.posY = pY; //позиция шарика по Y
+				//цвет шарика, формируется случайным оьразом
+				// // радиус шарика, случайное число от 5 до 30
+				this.size = 5+Math.random()*25;// размер фигурки
+				this.orient = 0; //направление для рандомного двиижения
+				this.colFigure = 'rgb('+Math.floor(Math.random()*256)+','
+                +Math.floor(Math.random()*256)+','+Math.floor(Math.random()*256)+')';
+                },//цвет фигурки
+			// posX: 0,
+			// posY: 0,
+			// colBall:"rgb(0,0,0)",
+			// rBall: 0,
+			colorFigure: function(ctx){
+				// формируем градиентную заливку для шарикаc
+				with (this){
+					var gradient = ctx.createRadialGradient(posX+size/4,
+					posY-size/6, size/8, posX, posY, size);
+					gradient.addColorStop(0, '#fff');
+					gradient.addColorStop(0.85, colFigure);
+					return gradient;
+				}
+			},
+		})
+		TBall = new Class({
+            Extends: TFigure, //создание дочернего класса дл
+            draw: function(ctx){
+                // рисуем шарик на canvas
+                with (this){
+                    ctx.fillStyle = colorFigure(ctx);
+                    ctx.beginPath();
+                    ctx.arc(posX, posY, size/2, 0, 2*Math.PI, false); //дуги	
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            },
+        });
+        
+        TSquare = new Class({
+            Extends: TFigure,
+            draw: function(ctx){
+                // рисуем шарик на canvas
+                with (this){
+                    ctx.fillStyle = colFigure;
+                    ctx.beginPath(); //Создает новый контур.
+                    ctx.moveTo(posX - size / 2, posY - size / 2) //Перемещает перо в точку с координатами x и y.
+                    ctx.lineTo(posX + size / 2, posY - size / 2)  //Рисует линию с текущей позиции до позиции, определенной x и y.
+                    ctx.lineTo(posX + size / 2, posY + size / 2)
+                    ctx.lineTo(posX - size / 2, posY + size / 2)
+                    ctx.lineTo(posX - size / 2, posY - size / 2)
+                    ctx.closePath(); //Закрывает контур, так что будущие команды рисования вновь направлены контекс
+                    ctx.fill(); //Рисует фигуру с заливкой внутренней области.
+                }
+            },
+        });
+        TTriangle = new Class({
+            Extends: TFigure,
+            draw: function(ctx){
+                // рисуем шарик на canvas
+                with (this){
+                    ctx.fillStyle = colFigure;
+                    ctx.beginPath();
+                    ctx.moveTo(posX, posY + size / 2)
+                    ctx.lineTo(posX + size / 2, posY + size / 2)
+                    ctx.lineTo(posX + size / 2, posY - size / 2)
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            },
+        });
+		function drawBack(ctx,col1,col2,w,h){
+			// закрашиваем канвас градиентным фоном
+			ctx.save();
+			var g = ctx.createLinearGradient(0,0,0,h);
+			g.addColorStop(1,col1);
+			g.addColorStop(0,col2);
+			ctx.fillStyle = g;
+			ctx.fillRect(0,0,w,h);
+			ctx.restore();
+		}
+		// инициализация работы
+		function init(){
+			canvas = document.getElementById('canvas');
+			if (canvas.getContext){
+				ctx = canvas.getContext('2d');
+				//рисуем фон
+				drawBack(ctx,'#202020','#aaa',canvas.width,canvas.height);
+				//создаем 10 шариков, заноси их в массив и выводим на canvas
+				figure = [];
+				for (var i = 1; i<=10;i++){
+					var item = new TBall(10+Math.random()*(canvas.width-30),
+					10+Math.random()*(canvas.height-30));
+					item.draw(ctx);
+					figure.push(item);
+				}
+				for (var i = 1; i<=10;i++){
+					var item = new TTriangle(10+Math.random()*(canvas.width-30),
+					10+Math.random()*(canvas.height-30));
+					item.draw(ctx);
+					figure.push(item);
+				}
+				for (var i = 1; i<=10;i++){
+					var item = new TSquare(10+Math.random()*(canvas.width-30),
+					10+Math.random()*(canvas.height-30));
+					item.draw(ctx);
+					figure.push(item);
+				}
+			}
+		}
+		// создаем новый шарик по щелчку мыши, добавляем его в массив шариков и рисуем его
+		function goInput(event){
+			var x = event.clientX;
+			var y = event.clientY;
+			var item = Math.floor(1 + Math.random() * (3 + 1 - 1));
+			if (item == 1)  
+			    item = new TBall(x,y)
+			else if (item == 2)  
+			    item = new TTriangle(x,y)
+			else if (item == 3)
+			    item = new TSquare(x,y)
+            item.orient =  Math.floor(1 + Math.random() * (4+ 1 - 1));
+			item.draw(ctx);
+			figure.push(item);
+		}
+		 
+function increase(){
+            drawBack(ctx,'#202020','#aaa',canvas.width,canvas.height);
+            var n = document.getElementById('n').value;
+            for (var i = 0; i < figure.length; i){
+                figure[i].draw(ctx);
+                figure[i].size = figure[i].size + 1
+                if (figure[i].size > n){
+                    figure[i].size = 0;
+                    figure.splice(i, 1)
+                } 
+                else {
+                    i++
+                }
+            }
+        }
+        function deletefigure(){
+			var res = false;
+			for (var i = 0; i < figure.length; i){
+				for (var j = 0; j < figure.length; j){
+					if (i == j){
+						j++
+						continue
+					}
+					if (((figure[i] instanceof TSquare) && (figure[j] instanceof TSquare)) || ((figure[i] instanceof TSquare) && (figure[j] instanceof TTriangle)) || ((figure[i] instanceof TTriangle) && (figure[j] instanceof TTriangle)) || ((figure[i] instanceof TBall) && (figure[j] instanceof TBall)) || ((figure[i] instanceof TSquare) && (figure[j] instanceof TBall)) || ((figure[i] instanceof TTriangle) && (figure[j] instanceof TBall))){
+						if (((figure[i].size + figure[j].size) / 2) > (Math.abs(figure[i].posX - figure[j].posX)) &&
+						     ((figure[i].size + figure[j].size) / 2) > (Math.abs(figure[i].posY - figure[j].posY))){
+						    res = true;
+						}
+					}
+					if (res){
+						figure.splice(j, 1)
+						figure.splice(i, 1)
+						res = false
+						break
+					}
+				else {
+					figure[j].draw(ctx);
+					j++
+				}
+				} 
+			i++  
+			}
+		}
+		function movefigures(a){
+            //реализация движения шариков, находящихся в массиве figure
+            drawBack(ctx,'#202020','#aaa',canvas.width,canvas.height);
+            var m = a;
+            for (var i = 0; i < figure.length;i){
+                if (a == 5){
+                    m =  Math.floor(1 + Math.random() * (4 + 1 - 1));
+                }
+                
+                if (a == 6){
+                    if (figure[i].orient == 1){
+                        figure[i].posX = figure[i].posX + (Math.random()*4-2);
+                        figure[i].posY = figure[i].posY + (Math.random()*2-4);
+                    }
+                    else if (figure[i].orient == 2){
+                        figure[i].posX = figure[i].posX - (Math.random()*4-2);
+                        figure[i].posY = figure[i].posY - (Math.random()*2-4);
+                    }
+                    else if (figure[i].orient == 3){
+                        figure[i].posX = figure[i].posX - (Math.random()*2-4);
+                        figure[i].posY = figure[i].posY + (Math.random()*4-2);
+                    }
+                    else if (figure[i].orient == 4){
+                        figure[i].posX = figure[i].posX + (Math.random()*2-4);
+                        figure[i].posY = figure[i].posY - (Math.random()*4-2);
+                    };
+                }
+                if (m == 1){
+                    figure[i].posX = figure[i].posX + (Math.random()*4-2);
+                    figure[i].posY = figure[i].posY + (Math.random()*2-4);
+                }
+                else if (m == 2){
+                    figure[i].posX = figure[i].posX - (Math.random()*4-2);
+                    figure[i].posY = figure[i].posY - (Math.random()*2-4);
+                }
+                else if (m == 3){
+                    figure[i].posX = figure[i].posX - (Math.random()*2-4);
+                    figure[i].posY = figure[i].posY + (Math.random()*4-2);
+                }
+                else if (m == 4){
+                    figure[i].posX = figure[i].posX + (Math.random()*2-4);
+                    figure[i].posY = figure[i].posY - (Math.random()*4-2);
+                };
+                figure[i].draw(ctx);
+                if ((figure[i].posX > canvas.width)||(figure[i].posX < 0) ||(figure[i].posY < 0)) 
+                    figure.splice(i,1);
+                else 
+                    i++;
+            }
+            increase()
+            deletefigure()
+        }
+        function move(a){
+            clearInterval(idTimer);
+            if (a == 1)
+                idTimer = setInterval('movefigures(1);',50)
+            else if (a == 2)
+                idTimer = setInterval('movefigures(2);',50)
+            else if (a == 3)
+                idTimer = setInterval('movefigures(3);',50)
+            else if (a == 4)
+                idTimer = setInterval('movefigures(4);',50)
+            else if (a == 5)
+                idTimer = setInterval('movefigures(5)',50)
+            else if (a == 6){
+                for (var i = 0; i < figure.length;i++){
+                    figure[i].orient =  Math.floor(1 + Math.random() * (4+ 1 - 1));
+                }
+                idTimer = setInterval('movefigures(6)',50)
+            };
+        }
+
+	</script>
+	<style type="text/css">
+		canvas { border: 1px solid blue; }
+	</style>
+</head>
+<body onload="init();">
+	<canvas id="canvas" width="600" height="400" onclick="goInput(event);">
+	</canvas>
+	<form>
+		<input type = "button" value = "Движение вверх" onclick="move(1)">
+		<input type = "button" value = "Движение вниз" onclick="move(2)">
+		<input type = "button" value = "Движение влево" onclick="move(3)">
+		<input type = "button" value = "Движение вправо" onclick="move(4)">
+		<input type = "button" value = "рандомное движение" onclick="move(6)">
+		<input type = "button" value = "ХАОС" onclick="move(5)">
+		<!-- <input type = "button" value = "увеличить" onclick="move()"> -->
+		<input type = "button" value = "Стоп" onclick="clearInterval(idTimer);">
+            n: <input id="n" type="Number">
+         </form>
+</body>
+</html>
